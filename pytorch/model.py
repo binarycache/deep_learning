@@ -20,6 +20,7 @@ class Network(nn.Module):
 
     All these four parameters giving a new mean and standard deviation 
     to the outputs of the activation function are learnable.
+    It speeds up the training and makes the model robust to outlier weights.
     """
 
     def __init__(self, batch_norm=False):
