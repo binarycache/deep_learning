@@ -6,15 +6,20 @@ import torch.nn.functional as F
 class Network(nn.Module):
 
     """
+
+    Notes
+    -----------------------
+
+    Activation Function: 
     Use Lecun Initialization, Alpha Dropout and SELU activation function.
-
     Note: Lecun Init and Alpha Dropput are mandatory for SELU.
-
     ELU is better than LeakyRelu, alpha value for both is taken as 0.1 - 0.3
 
-    
+    BatchNormalization:
+    Consists of standardization ((x-u)/sigma) + scale (multiply by alpha) + shift (add beta)
 
-
+    All these four parameters giving a new mean and standard deviation 
+    to the outputs of the activation function are learnable.
     """
 
     def __init__(self, batch_norm=False):
