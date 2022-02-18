@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class Network(nn.Module):
 
-    '''
+    """
     Use Lecun Initialization, Alpha Dropout and SELU activation function.
 
     Note: Lecun Init and Alpha Dropput are mandatory for SELU.
@@ -14,45 +15,56 @@ class Network(nn.Module):
     
 
 
-    '''
-    
-    def __init__(self):
+    """
+
+    def __init__(self, batch_norm=False):
         super(Network, self).__init__()
+        self.batch_norm = batch_norm
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5)
+        if batch_norm:
+            self.batch_norm1 = nn.BatchNorm2d(6)
         self.conv2 = nn.Conv2d(in_channels=6, out_channels=12, kernel_size=5)
-        
-        self.fc1 = nn.Linear(in_features= 12 * 4 * 4, out_features=120)
+
+        # We are working with images so BatchNorm2d
+        # num_features = out_features from the previous layer.
+        if batch_norm:
+            self.batch_norm2 = nn.BatchNorm2d(12)
+
+        self.fc1 = nn.Linear(in_features=12 * 4 * 4, out_features=120)
         self.fc2 = nn.Linear(in_features=120, out_features=60)
         self.out = nn.Linear(in_features=60, out_features=10)
-        
+
     def forward(self, t):
-        # input layer 
+        # input layer
         t = t
-        
-        #conv layer 1
+
+        # conv layer 1
         t = self.conv1(t)
         t = F.relu(t)
         t = F.max_pool2d(t, kernel_size=2, stride=2)
-        
-        #conv layer 2
+        if self.batch_norm:
+            t = self.batch_norm1(t)
+
+        # conv layer 2
         t = self.conv2(t)
         t = F.relu(t)
         t = F.max_pool2d(t, kernel_size=2, stride=2)
-        
-        
+        if self.batch_norm:
+            t = self.batch_norm2(t)
+
         # reshape before the FC layers
-        t = t.reshape(-1, 12*4*4)
+        t = t.reshape(-1, 12 * 4 * 4)
         t = self.fc1(t)
         t = F.relu(t)
-        
+
         # second hidden layer
         t = self.fc2(t)
         t = F.relu(t)
-        
+
         # output layer
         t = self.out(t)
-        
+
         # softmax is performed implicitly by the loss function
         # t = F.softmax(t, dim=1)
-        
+
         return t

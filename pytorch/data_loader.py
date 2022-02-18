@@ -8,7 +8,7 @@ import sklearn
 
 class DataLoader:
     """
-    python class to load data for cnn.ipynb
+    python class to load data.
     """
 
     def __init__(self, dataset_name, normalize=False, batch_size=32, num_workers=0):
@@ -19,7 +19,7 @@ class DataLoader:
         self.train_loader = self.loader(normalize)
 
     def load_data(self):
-        self.train_set = torchvision.datasets.FashionMNIST(
+        return torchvision.datasets.FashionMNIST(
             root="./data",
             train=True,
             download=True,
