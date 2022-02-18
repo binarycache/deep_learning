@@ -26,7 +26,10 @@ class DataLoader():
                         ]
                     )
                 )
-            return torch.utils.data.DataLoader(self.train_set, self.batch_size)
+            # set num_workers to 1; adding more workers does not help
+            # since the  workers just queue the next batch 
+            # processing still remains a bottleneck   
+            return torch.utils.data.DataLoader(self.train_set, self.batch_size, num_workers=1)
         else:
             return None
         
