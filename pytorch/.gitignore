@@ -3,15 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-
-# Everything
-.ipynb_checkpoints/
-.mypy_cache/
-.vscode/
-runs/
-data/
-numpy/
-.pytest_cache/
 # pytest
 .pytest_cache/
 
