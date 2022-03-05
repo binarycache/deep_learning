@@ -11,7 +11,7 @@ class SelfAttention(nn.module):
     
     '''
     
-    def __init__(self, k:int, n_heads:int = 8):
+    def __init__(self, k:int, n_heads:int = 8, mask=False):
         '''
         Args:
         ---------------------------
@@ -30,6 +30,7 @@ class SelfAttention(nn.module):
         super().__init__()
         self.k = k 
         self.n_heads = n_heads
+        self.mask = mask
         # These compute the queries, keys and values for all 
         # heads (as a single concatenated vector)
         # this will generate the weight matrices Wq^r, Wk^r, Wv^r
@@ -70,20 +71,30 @@ class SelfAttention(nn.module):
             keys = queries.transpose(1,2).contiguous().view(b*h,t,k)
             values = queries.transpose(1,2).contiguous().view(b*h,t,k)
             
-            # let's scale these before doing dot product.
-            # instead scale the keys and queries by fourth root of k before multiplying them together. 
-            # This should save memory for longer sequences.
-            queries = queries / (k ** (1/4))
-            keys    = keys / (k ** (1/4))
-            
             
             # - get dot product of scaled queries and keys
             dot = torch.bmm(queries, keys.transpose(1, 2))
-            # - dot has size (b*h, t, t) containing raw weights
-
+            
+            # scaling the dot product
+            dot = dot / math.sqrt(k) 
+            
+            # - dot has size (b*h, t, k) containing raw weights
+            assert dot.size() == (b*h, t, k), f'Matrix has size {dot.size()}, expected {(b*h, t, k)}.'
+            
+            if self.mask: # mask out the lower half of the dot matrix,including the diagonal
+                mask_(dot, maskval=float('-inf'), mask_diagonal=False)
+            
             dot = F.softmax(dot, dim=2) 
             # - dot now contains row-wise normalized weights
+            assert not util.contains_nan(dot[:, 1:, :]) # only the forst row may contain nan
             
+            if self.mask == 'first':
+                dot = dot.clone()
+                dot[:, :1, :] = 0.0
+                # - The first row of the first attention matrix is entirely masked out, 
+                # so the softmax operation results
+                #   in a division by zero. We set this row to zero by hand to get rid of the NaNs
+
             # apply the self attention to the values
             out = torch.bmm(dot, values).view(b, h, t, k)
             
